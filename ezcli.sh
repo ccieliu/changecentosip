@@ -1,19 +1,27 @@
 #!/bin/bash
+#Version: 1.0
 #echo $1 $2 $3 $4 $5 $6 $7
 #ensXXX ip addr [ADDR] [MASK] gw [GATEWAY]
 if [ $# -eq 0 ]
 then
-	echo ""
-	echo "Usage: ezcli [ensXX] ip addr [ADDRESS] [MASK] gw [GATEWAY]"
-	echo ""
-	echo "========================== "
-	ifconfig | grep mtu | awk '{ print $1 }' | grep -v lo >/tmp/nic.tmp
-	/sbin/ip add show | grep -w inet | grep -v '127.0.0.1' | awk '{ print $2 }' >/tmp/ip.tmp
-	paste /tmp/nic.tmp /tmp/ip.tmp
-	echo "========================== "
-	rm -rf /tmp/nic.tmp /tmp/ip.tmp
-	echo ""
-	exit 1
+        echo ""
+        echo -e "\e[31mUsage: ezcli [ensXX] ip addr [ADDRESS] [MASK] gw [GATEWAY]\e[0m"
+        echo ""
+        echo "========================== "
+        for DEV in /sys/class/net/*; do
+                printf  "%-10s %s\n" ${DEV##*/} $(ip addr show ${DEV##*/} | \
+                sed -rne '/inet/s:\s+inet\s+([0-9.]+).*:\1:gp');
+        done
+        echo ""
+
+        echo "========================== "
+        route -n | awk 'NR!=1'
+        echo ""
+        echo "========================== "
+        arp -n
+        rm -rf /tmp/nic.tmp /tmp/ip.tmp
+        echo ""
+        exit 1
 fi
 
 [ -d /etc/sysconfig/network-scripts/eth-config-backup/ ] || mkdir /etc/sysconfig/network-scripts/eth-config-backup/
